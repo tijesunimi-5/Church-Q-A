@@ -9,7 +9,7 @@ export default function Home() {
           <div className="overlay"></div>
         </div>
         <div className="relative z-20 text-white">
-          <h1 className=" uppercase mt-20 font-bold">
+          <h1 className=" uppercase mt-20 pt-10 font-bold">
             Welcome To Your Exam
           </h1>
           <p className="text-start px-2">
@@ -22,8 +22,8 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="mt-10">
-        <h1 className="font-bold">Fill in correct details</h1>
+      <div className="mt-24">
+        <h1 className="font-bold text-2xl">Fill in correct details</h1>
         <form className="mt-3">
           <div className="text-start ml-9">
             <label htmlFor="fullname" className=" pl-2 font-semibold">
