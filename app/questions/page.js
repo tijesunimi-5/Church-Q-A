@@ -8,6 +8,7 @@ const QuizPage = () => {
   const dispatch = useDispatch();
   const { isLoading, error } = useSelector((state) => state.quiz);
   const [answers, setAnswers] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');  
 
   const handleInputChange = (questionId, value) => {
     setAnswers((prev) => ({
@@ -18,7 +19,13 @@ const QuizPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    dispatch(submitQuizAnswers(answers));
+    dispatch(submitQuizAnswers(answers))
+      .then(() => {
+        setSuccessMessage('Quiz submitted successfully!');  // Update success message
+      })
+      .catch((err) => {
+        console.error("Submission error:", err);
+      });
   };
 
   const renderQuestion = (id, question, isTextArea = false) => (
@@ -104,10 +111,10 @@ const QuizPage = () => {
         </form>
 
         {error && <p className="text-red-500 text-center mt-4">{error}</p>}
+        {successMessage && <p className="text-green-500 text-center mt-4">{successMessage}</p>}  
       </div>
     </div>
   );
 };
 
 export default QuizPage;
-
