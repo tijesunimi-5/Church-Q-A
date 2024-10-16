@@ -1,10 +1,16 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 const formRoutes = require('./routes');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(cors({
+    origin: 'http://localhost:3000', 
+}));
+
+app.use(express.json());
+const PORT = process.env.PORT || 3001;
 
 mongoose.connect('mongodb+srv://konsizeinc:19Ana156@cluster0.tqybw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
     useNewUrlParser: true,
