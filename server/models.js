@@ -1,53 +1,47 @@
 const mongoose = require('mongoose');
 
-
-const formSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-        trim: true,
-        minlength: 2,
-        maxlength: 50
+const quizSchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', 
+        
     },
-    email: {
-        type: String,
-        required: true,
-        trim: true,
-        lowercase: true,
-        match: [/.+@.+\..+/, 'Please enter a valid email address']
-    },
-    phone: {
-        type: String,
-        required: false,
-        trim: true,
-        match: [/^\d{10,15}$/, 'Please enter a valid phone number']
-    },
-    address: {
-        street: { type: String, required: false, trim: true },
-        city: { type: String, required: false, trim: true },
-        state: { type: String, required: false, trim: true },
-        zip: { type: String, required: false, trim: true }
-    },
-    dateOfBirth: {
-        type: Date,
-        required: false
-    },
-    gender: {
-        type: String,
-        enum: ['Male', 'Female', 'Other'],
-        required: false
-    },
-    message: {
-        type: String,
-        required: true,
-        trim: true,
-        minlength: 5,
-        maxlength: 500
-    },
-    agreeToTerms: {
-        type: Boolean,
-        required: true,
-        default: false
+    answers: {
+        q1: { type: String, required: false, trim: false },
+        q2: { type: String, required: false, trim: false },
+        q3a: { type: String, required: false, trim: false },
+        q3b: { type: String, required: false, trim: false },
+        q3c: { type: String, required: false, trim: false },
+        q3d: { type: String, required: false, trim: false },
+        q4: { type: String, required: false, trim: false },
+        q5: { type: String, required: false, trim: false },
+        q6: { type: String, required: false, trim: false },
+        q7a: { type: String, required: false, trim: false },
+        q7b: { type: String, required: false, trim: false },
+        q8: { type: String, required: false, trim: false },
+        q9: { type: String, required: false, trim: false },
+        q10a: { type: String, required: false, trim: false },
+        q10b: { type: String, required: false, trim: false },
+        q11a: { type: String, required: false, trim: false },
+        q11b: { type: String, required: false, trim: false },
+        q12a: { type: String, required: false, trim: false },
+        q13: { type: String, required: false, trim: false },
+        q14: { type: String, required: false, trim: false },
+        q15: { type: String, required: false, trim: false },
+        q16: { type: String, required: false, trim: false },
+        q17: { type: String, required: false, trim: false },
+        q18: { type: String, required: false, trim: false },
+        q19: { type: String, required: false, trim: false },
+        q20: { type: String, required: false, trim: false },
+        q21: { type: String, required: false, trim: false },
+        q22: { type: String, required: false, trim: false },
+        q23: { type: String, required: false, trim: false },
+        q24: { type: String, required: false, trim: false },
+        q25: { type: String, required: false, trim: false },
+        q26: { type: String, required: false, trim: false },
+        q27: { type: String, required: false, trim: false },
+        q28: { type: String, required: false, trim: false },
+        q29: { type: String, required: false, trim: false }
     },
     submittedAt: {
         type: Date,
@@ -55,7 +49,6 @@ const formSchema = new mongoose.Schema({
     }
 });
 
+const Quiz = mongoose.model('Quiz', quizSchema);
 
-const Form = mongoose.model('Form', formSchema);
-
-module.exports = Form;
+module.exports = Quiz;
