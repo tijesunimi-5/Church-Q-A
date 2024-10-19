@@ -5,6 +5,11 @@ import Card from "@/components/Card";
 import { submitQuizAnswers } from "../redux/reduxSlice";
 
 const AdminPanel = () => {
+  const dummyData = {
+    id: "q1",
+    question: "3a. For whom is the worker in this mission working for?",
+    answer: "For God",
+  };
   return (
     <div>
       <div className='mt-10 '>
@@ -28,6 +33,8 @@ const AdminPanel = () => {
 
               <ul>
                 {/**Can map li for each Q/A */}
+                <li>Question: {dummyData.question}</li>
+                <li>Answer: {dummyData.answer}</li>
               </ul>
             </div>
           </Card>
