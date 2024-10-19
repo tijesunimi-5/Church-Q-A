@@ -21,7 +21,7 @@ const QuizPage = () => {
     e.preventDefault();
     dispatch(submitQuizAnswers(answers))
       .then(() => {
-        setSuccessMessage('Quiz submitted successfully!');  // Update success message
+        setSuccessMessage('Quiz submitted successfully!');  
       })
       .catch((err) => {
         console.error("Submission error:", err);
