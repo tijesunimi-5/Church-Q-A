@@ -204,6 +204,10 @@ const QuizPage = () => {
                 {error && (
                   <p className="text-red-500 text-center mt-4">{error}</p>
                 )}
+
+                {successMessage && (
+                  <p className="text-green-500 text-center mt-4">{successMessage}</p>
+                )}
               </div>
             </div>
           </div>

@@ -1,47 +1,60 @@
 "use client";
-import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Card from "@/components/Card";
-import { submitQuizAnswers } from "../redux/reduxSlice";
+import { fetchQuizAnswers } from "../redux/reduxSlice";
 
-const AdminPanel = () => {
-  const dummyData = {
-    id: "q1",
-    question: "3a. For whom is the worker in this mission working for?",
-    answer: "For God",
+const QuizPage = () => {
+  const dispatch = useDispatch();
+  const { isLoading, error, answerResult } = useSelector((state) => state.quiz);
+
+  useEffect(() => {
+    dispatch(fetchQuizAnswers());
+  }, [dispatch]);
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return isNaN(date) ? 'Invalid Date' : date.toLocaleString();
   };
+
+  const renderAnswers = (answers) => {
+    if (!answers) return null; // Check if answers is defined
+
+    return Object.entries(answers).map(([questionId, answer]) => (
+      <div key={questionId} className="pl-4">
+        <h3>{questionId}: {answer}</h3>
+      </div>
+    ));
+  };
+
   return (
-    <div>
-      <div className='mt-10 '>
-        <h1 className='text-2xl font-bold uppercase text-center'>Admin Panel</h1>
+    <div className="container mx-auto p-4">
+      <div className="overall mt-10">
+        <h1 className="font-bold uppercase text-center underline md:text-3xl">
+          Submitted Answers
+        </h1>
 
+        {isLoading && <p className="text-center">Loading...</p>}
+        {error && <p className="text-red-500 text-center">{error}</p>}
 
-        {/**UI for the rendering of each user's details and answer */}
-        <div className='ml-2 mt-5'>
-          <Card>
-            {/**Users personal info */}
-            <div className='ml-10'>
-              <h1 className='font-bold'>Name: Tijesunimi Samuel</h1>
-              <h2 className='font-medium'>Email: tijesunimiidowu16@gmail.com</h2>
-              <p>Phone number: 07018268171</p>
-              <p>Course: Computer Science</p>
-            </div>
-
-            {/** Question and User's answer page */}
-            <div>
-              <h1 className='text-center mt-5 font-bold underline'>Answers</h1>
-
-              <ul>
-                {/**Can map li for each Q/A */}
-                <li>Question: {dummyData.question}</li>
-                <li>Answer: {dummyData.answer}</li>
-              </ul>
-            </div>
-          </Card>
-        </div>
-        </div>      
+        {answerResult && answerResult.length > 0 ? (
+          <div className="py-6">
+            {answerResult.map(({ _id, answers, submittedAt }) => (
+              <Card key={_id} className="mb-4 p-4">
+                <h2 className="font-bold">Submission ID: {_id}</h2>
+                <div className="answers">
+                  {renderAnswers(answers)} {/* Safeguard against undefined */}
+                </div>
+                <p className="mt-2">Submitted At: {formatDate(submittedAt)}</p>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center">No submitted answers available.</p>
+        )}
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default AdminPanel;
+export default QuizPage;

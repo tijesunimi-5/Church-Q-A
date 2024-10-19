@@ -1,12 +1,28 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const baseUrl = 'http://localhost:3001/api/forms/submit'
+const baseUrl = 'http://localhost:3001/api/forms/submit';
+const fetchUrl = 'http://localhost:3001/api/forms/submissions';
+
 export const submitQuizAnswers = createAsyncThunk(
   'quiz/submitAnswers',
   async (answers, { rejectWithValue }) => {
     try {
       const response = await axios.post(`${baseUrl}`, answers);
+      return response.data;
+      console.log(response.data);
+      console.log('Hi')
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
+export const fetchQuizAnswers = createAsyncThunk(
+  'quiz/fetchAnswers',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(fetchUrl);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -14,12 +30,15 @@ export const submitQuizAnswers = createAsyncThunk(
   }
 );
 
+
+
 const quizSlice = createSlice({
   name: 'quiz',
   initialState: {
     isLoading: false,
     error: null,
     submissionResult: null,
+    answerResult: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -35,6 +54,18 @@ const quizSlice = createSlice({
       .addCase(submitQuizAnswers.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || 'An error occurred';
+      })
+      .addCase(fetchQuizAnswers.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchQuizAnswers.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.answerResult = action.payload; // Store the fetched answers
+      })
+      .addCase(fetchQuizAnswers.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload || "An error occurred";
       });
   },
 });
