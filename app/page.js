@@ -1,12 +1,11 @@
-'use client'
+"use client";
 
+import Card from "@/components/Card";
 import Link from "next/link";
+import {Success} from "@/components/Success"
 
 export default function Home() {
-
-  const nextPage = () => {
-    
-  }
+  const nextPage = () => {};
   return (
     <div className="text-center ">
       <div className="relative">
@@ -31,6 +30,7 @@ export default function Home() {
         </div>
       </div>
 
+      {/**These  lines here contains the form */}
       <div className="big-form-div mt-24 mb-56 md:mt-36 md:h-[60vh] lg:h-[50vh]">
         <div className="sec-form-div bg-gray-200 w-[330px]  ml-8 pl-4 rounded-lg shadow-xl  py-2 md:w-[600px] md:ml-20 lg:ml-48">
           <h1 className="font-bold text-2xl md:ml-40">
@@ -83,7 +83,8 @@ export default function Home() {
                 className="border-2 border-black w-[300px] rounded-lg md:w-[330px]"
               />
             </div>
-            <Link href={"/questions"}>
+            {/**This leads to the notification page and shows successful */}
+            <Link href={"/Notification"}>
               <button
                 onClick={nextPage}
                 className="button mt-4 border-2 border-black rounded-md w-[200px] ml-12 py-1 md:ml-32"
@@ -93,6 +94,7 @@ export default function Home() {
             </Link>
           </form>
         </div>
+        
       </div>
     </div>
   );

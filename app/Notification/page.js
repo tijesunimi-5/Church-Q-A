@@ -1,4 +1,5 @@
 import Success from '@/components/Success';
+import Link from 'next/link';
 import React from 'react'
 
 const page = () => {
@@ -7,6 +8,8 @@ const page = () => {
       <div className='mt-32 ml-2 justify-center align-middle'>
         {/**Component to show if login is successfull */}
         <Success />
+
+        
       </div>
     </div>
   );

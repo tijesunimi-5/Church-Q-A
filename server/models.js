@@ -49,6 +49,34 @@ const quizSchema = new mongoose.Schema({
     }
 });
 
-const Quiz = mongoose.model('Quiz', quizSchema);
+const courseRegistration = new mongoose.Schema({
+    fullName : {
+        type: String,
+        trim: true,
+        required: true
+    },
+    email: {
+        type: String,
+        required: true,
+        trim: true,
+        unique: true,
+    },
+    phoneNumber: {
+        type: String,
+        required: true,
+        trim: true,
+    },
+    courseName: {
+        type: String,
+        required: true,
+        trim: true,
+    },
+    registrationDate: {
+        type: Date,
+        default: Date.now,
+    },
+});
 
-module.exports = Quiz;
+const Quiz = mongoose.model('Quiz', quizSchema);
+const CourseRegistration = mongoose.model('CourseRegistration', courseRegistration);
+module.exports = { Quiz, CourseRegistration };
