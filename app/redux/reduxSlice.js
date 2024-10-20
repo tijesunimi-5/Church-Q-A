@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const baseUrl = 'http://localhost:3001/api/forms/submit';
 const fetchUrl = 'http://localhost:3001/api/forms/submissions';
-
+const registerUrl = 'http://localhost:3001/api/forms/register';
 export const submitQuizAnswers = createAsyncThunk(
   'quiz/submitAnswers',
   async (answers, { rejectWithValue }) => {
@@ -18,6 +18,19 @@ export const submitQuizAnswers = createAsyncThunk(
   }
 );
 
+export const register = createAsyncThunk(
+  'quiz/register',
+  async (data, {rejectWithValue }) => {
+    try {
+    const response = await axios.post(`${registerUrl}`, data);
+    return response.data;
+    console.log(response.data);
+  } catch (error) {
+    return rejectWithValue(error.response.data);
+    console.log(error);
+  }
+}
+)
 export const fetchQuizAnswers = createAsyncThunk(
   'quiz/fetchAnswers',
   async (_, { rejectWithValue }) => {
@@ -39,6 +52,7 @@ const quizSlice = createSlice({
     error: null,
     submissionResult: null,
     answerResult: null,
+    data: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -66,6 +80,18 @@ const quizSlice = createSlice({
       .addCase(fetchQuizAnswers.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || "An error occurred";
+      })
+      .addCase(register.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(register.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.data = action.payload || 'An error occurred';
+      })
+      .addCase(register.rejected, (state, action) => {
+        state.isLoading = false,
+        state.data = action.payload || "An error occured"
       });
   },
 });

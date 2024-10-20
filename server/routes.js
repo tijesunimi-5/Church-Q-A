@@ -4,7 +4,7 @@ const { Quiz, CourseRegistration } = require('./models');
 
 router.post('/submit', async (req, res) => {
     try {
-        // Destructure fields from the request body
+       
         const {
             userId,
             // Question answers
@@ -45,7 +45,6 @@ router.post('/submit', async (req, res) => {
             q29
         } = req.body;
 
-        // Create a new Quiz object with organized fields
         const newQuiz = new Quiz({
             userId,
             answers: {
@@ -109,16 +108,17 @@ router.post('/submit', async (req, res) => {
 
 router.post('/register', async (req, res) => {
     try {
-        const { fullName, email, courseName } = req.body;
+        const { fullName, email, phoneNumber, courseName } = req.body;
         const newRegistration = new CourseRegistration({
-            fullName, email, courseName
+            fullName, email, phoneNumber, courseName
         });
-        await newRegistration.save();
-        res.status(201).json({ message: 'Registration successful'});
+
+        const user = await newRegistration.save();
+        res.status(201).json(user);
         console.log('Sucessful');
     } catch (err){
         res.status(500).json({ message: 'An error occured during registration'});
-        console.log('Error');
+        console.log('err');
     } 
 });
 
