@@ -14,7 +14,7 @@ const QuizPage = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return isNaN(date) ? 'Invalid Date' : date.toLocaleString();
+    return isNaN(date) ? "Invalid Date" : date.toLocaleString();
   };
 
   const renderAnswers = (answers) => {
@@ -22,7 +22,9 @@ const QuizPage = () => {
 
     return Object.entries(answers).map(([questionId, answer]) => (
       <div key={questionId} className="pl-4">
-        <h3>{questionId}: {answer}</h3>
+        <h3>
+          {questionId}: {answer}
+        </h3>
       </div>
     ));
   };
@@ -35,7 +37,7 @@ const QuizPage = () => {
         </h1>
 
         {isLoading && <p className="text-center">Loading...</p>}
-        {error && <p className="text-red-500 text-center">{error}</p>}
+        {error && <p className="text-red-500 text-center">Failed to load</p>}
 
         {answerResult && answerResult.length > 0 ? (
           <div className="py-6">

@@ -5,12 +5,12 @@ export const store = configureStore({
   reducer: {
     quiz: quizReducer,
   },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(loggerMiddleware),
-  preloadedState: loadFromLocalStorage(), 
+  // middleware: (getDefaultMiddleware) =>
+  //   getDefaultMiddleware().concat(loggerMiddleware),
+  //   preloadedState: loadFromLocalStorage(), 
 });
 
 
-store.subscribe(() => {
-  saveToLocalStorage(store.getState());
-});
+// store.subscribe(() => {
+//   saveToLocalStorage(store.getState());
+// });
