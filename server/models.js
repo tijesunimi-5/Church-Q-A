@@ -1,82 +1,83 @@
 const mongoose = require('mongoose');
 
-const quizSchema = new mongoose.Schema({
+// Schema for the merged form (quiz + course registration)
+const mergedFormSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', 
-        
+        ref: 'User',
+        required: true,
     },
-    answers: {
-        q1: { type: String, required: false, trim: false },
-        q2: { type: String, required: false, trim: false },
-        q3a: { type: String, required: false, trim: false },
-        q3b: { type: String, required: false, trim: false },
-        q3c: { type: String, required: false, trim: false },
-        q3d: { type: String, required: false, trim: false },
-        q4: { type: String, required: false, trim: false },
-        q5: { type: String, required: false, trim: false },
-        q6: { type: String, required: false, trim: false },
-        q7a: { type: String, required: false, trim: false },
-        q7b: { type: String, required: false, trim: false },
-        q8: { type: String, required: false, trim: false },
-        q9: { type: String, required: false, trim: false },
-        q10a: { type: String, required: false, trim: false },
-        q10b: { type: String, required: false, trim: false },
-        q11a: { type: String, required: false, trim: false },
-        q11b: { type: String, required: false, trim: false },
-        q12a: { type: String, required: false, trim: false },
-        q13: { type: String, required: false, trim: false },
-        q14: { type: String, required: false, trim: false },
-        q15: { type: String, required: false, trim: false },
-        q16: { type: String, required: false, trim: false },
-        q17: { type: String, required: false, trim: false },
-        q18: { type: String, required: false, trim: false },
-        q19: { type: String, required: false, trim: false },
-        q20: { type: String, required: false, trim: false },
-        q21: { type: String, required: false, trim: false },
-        q22: { type: String, required: false, trim: false },
-        q23: { type: String, required: false, trim: false },
-        q24: { type: String, required: false, trim: false },
-        q25: { type: String, required: false, trim: false },
-        q26: { type: String, required: false, trim: false },
-        q27: { type: String, required: false, trim: false },
-        q28: { type: String, required: false, trim: false },
-        q29: { type: String, required: false, trim: false }
+    // Course registration details
+    registrationDetails: {
+        fullName: {
+            type: String,
+            trim: true,
+            required: true
+        },
+        email: {
+            type: String,
+            trim: true,
+            required: true,
+            unique: true
+        },
+        phoneNumber: {
+            type: String,
+            trim: true,
+            required: true
+        },
+        courseName: {
+            type: String,
+            trim: true,
+            required: true
+        },
+        registrationDate: {
+            type: Date,
+            default: Date.now,
+        },
+    },
+    // Quiz answers
+    quizAnswers: {
+        q1: { type: String, trim: true },
+        q2: { type: String, trim: true },
+        q3a: { type: String, trim: true },
+        q3b: { type: String, trim: true },
+        q3c: { type: String, trim: true },
+        q3d: { type: String, trim: true },
+        q4: { type: String, trim: true },
+        q5: { type: String, trim: true },
+        q6: { type: String, trim: true },
+        q7a: { type: String, trim: true },
+        q7b: { type: String, trim: true },
+        q8: { type: String, trim: true },
+        q9: { type: String, trim: true },
+        q10a: { type: String, trim: true },
+        q10b: { type: String, trim: true },
+        q11a: { type: String, trim: true },
+        q11b: { type: String, trim: true },
+        q12a: { type: String, trim: true },
+        q13: { type: String, trim: true },
+        q14: { type: String, trim: true },
+        q15: { type: String, trim: true },
+        q16: { type: String, trim: true },
+        q17: { type: String, trim: true },
+        q18: { type: String, trim: true },
+        q19: { type: String, trim: true },
+        q20: { type: String, trim: true },
+        q21: { type: String, trim: true },
+        q22: { type: String, trim: true },
+        q23: { type: String, trim: true },
+        q24: { type: String, trim: true },
+        q25: { type: String, trim: true },
+        q26: { type: String, trim: true },
+        q27: { type: String, trim: true },
+        q28: { type: String, trim: true },
+        q29: { type: String, trim: true }
     },
     submittedAt: {
-        type: Date,
-        default: Date.now
-    }
-});
-
-const courseRegistration = new mongoose.Schema({
-    fullName : {
-        type: String,
-        trim: true,
-        required: true
-    },
-    email: {
-        type: String,
-        required: true,
-        trim: true,
-        unique: true,
-    },
-    phoneNumber: {
-        type: String,
-        required: true,
-        trim: true,
-    },
-    courseName: {
-        type: String,
-        required: true,
-        trim: true,
-    },
-    registrationDate: {
         type: Date,
         default: Date.now,
     },
 });
 
-const Quiz = mongoose.model('Quiz', quizSchema);
-const CourseRegistration = mongoose.model('CourseRegistration', courseRegistration);
-module.exports = { Quiz, CourseRegistration };
+const MergedForm = mongoose.model('MergedForm', mergedFormSchema);
+module.exports = { MergedForm };

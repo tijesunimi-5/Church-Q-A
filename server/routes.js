@@ -1,110 +1,86 @@
 const express = require('express');
 const router = express.Router();
-const { Quiz, CourseRegistration } = require('./models');
+const { MergedForm } = require('./models');
+const { body, validationResult } = require('express-validator');
 
-router.post('/submit', async (req, res) => {
-    try {
-       
-        const {
-            userId,
-            // Question answers
-            q1,
-            q2,
-            q3a,
-            q3b,
-            q3c,
-            q3d,
-            q4,
-            q5,
-            q6,
-            q7a,
-            q7b,
-            q8,
-            q9,
-            q10a,
-            q10b,
-            q11a,
-            q11b,
-            q12a,
-            q13,
-            q14,
-            q15,
-            q16,
-            q17,
-            q18,
-            q19,
-            q20,
-            q21,
-            q22,
-            q23,
-            q24,
-            q25,
-            q26,
-            q27,
-            q28,
-            q29
-        } = req.body;
+const rateLimit = require('express-rate-limit');
 
-        const newQuiz = new Quiz({
-            userId,
-            answers: {
-                q1,
-                q2,
-                q3: {
-                    a: q3a,
-                    b: q3b,
-                    c: q3c,
-                    d: q3d,
-                },
-                q4,
-                q5,
-                q6,
-                q7: {
-                    a: q7a,
-                    b: q7b,
-                },
-                q8,
-                q9,
-                q10: {
-                    a: q10a,
-                    b: q10b,
-                },
-                q11: {
-                    a: q11a,
-                    b: q11b,
-                },
-                q12a,
-                q13,
-                q14,
-                q15,
-                q16,
-                q17,
-                q18,
-                q19,
-                q20,
-                q21,
-                q22,
-                q23,
-                q24,
-                q25,
-                q26,
-                q27,
-                q28,
-                q29,
-            }
-        });
+const MESSAGES = {
+    QUIZ_SUBMITTED: 'Quiz submitted successfully',
+    SERVER_ERROR: 'An error occurred on the server',
+    VALIDATION_ERROR: 'Invalid input data',
+    RATE_LIMIT_ERROR: 'Too many attempts, please try again later'
+};
 
-        // Save the new quiz data to the database
-        await newQuiz.save();
-
-        res.status(201).json('Quiz submitted successfully!');
-        console.log('Successful');
-    } catch (err) {
-        console.error('Error saving quiz data:', err);
-        res.status(500).json('An error occurred while submitting the quiz');
-    }
+const submissionLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: { message: MESSAGES.RATE_LIMIT_ERROR }
 });
 
+const validateQuizAnswers = (answers) => {
+    const requiredFields = Array.from({ length: 29 }, (_, i) => `q${i + 1}`);
+    const multiPartQuestions = ['q3', 'q7', 'q10', 'q11', 'q12'];
+    
+    for (const field of requiredFields) {
+        if (multiPartQuestions.includes(field.replace(/[a-d]$/, ''))) continue;
+        if (!answers[field]) return false;
+    }
+    return true;
+};
+
+const validationRules = [
+    body('userId').isString().trim().notEmpty(),
+    body('registrationDetails.fullName').isString().trim().isLength({ min: 2, max: 100 }),
+    body('registrationDetails.email').isEmail().normalizeEmail(),
+    body('registrationDetails.phoneNumber').matches(/^\+?[\d\s-]{10,}$/),
+    body('registrationDetails.courseName').isString().trim().notEmpty(),
+    body('quizAnswers').custom(validateQuizAnswers)
+];
+
+router.post('/submit', submissionLimiter, validationRules, async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ 
+            message: MESSAGES.VALIDATION_ERROR, 
+            errors: errors.array() 
+        });
+    }
+
+    const { userId, registrationDetails, quizAnswers } = req.body;
+
+    try {
+        const newSubmission = new MergedForm({
+            userId,
+            registrationDetails: {
+                ...registrationDetails,
+                registrationDate: registrationDetails.registrationDate || Date.now(),
+                email: registrationDetails.email.toLowerCase()
+            },
+            quizAnswers: Object.entries(quizAnswers).reduce((acc, [key, value]) => ({
+                ...acc,
+                [key]: typeof value === 'string' ? value.trim() : value
+            }), {})
+        });
+
+        await newSubmission.save();
+
+        res.status(201).json({ 
+            message: MESSAGES.QUIZ_SUBMITTED,
+            submissionId: newSubmission._id 
+        });
+
+    } catch (error) {
+        const errorResponse = {
+            message: MESSAGES.SERVER_ERROR,
+            errorId: Date.now().toString(36) + Math.random().toString(36).substr(2)
+        };
+
+        console.error(`Error ID: ${errorResponse.errorId}`, error);
+        
+        res.status(500).json(errorResponse);
+    }
+});
 
 router.post('/register', async (req, res) => {
     try {

@@ -1,65 +1,83 @@
-"use client";
-import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import Card from "@/components/Card";
-import { submitQuizAnswers } from "./redux/reduxSlice";
-import { register } from "./redux/reduxSlice";
-import { Success } from "@/components/Success";
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
+import Card from '@/components/Card';
+import { submitQuizAnswers, register, resetQuizState } from './redux/reduxSlice';
 
 const QuizPage = () => {
   const dispatch = useDispatch();
-  const { isLoading, error } = useSelector((state) => state.quiz);
-  const [answers, setAnswers] = useState({});
-  const [successMessage, setSuccessMessage] = useState("");
+  const router = useRouter();
+  const { isLoading, error, success, registrationComplete } = useSelector((state) => state.quiz);
 
-  const handleInputChange = (questionId, value) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [questionId]: value,
-    }));
+  const [answers, setAnswers] = useState({});
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phoneNumber: '',
+    courseName: '',
+  });
+
+  const [validationErrors, setValidationErrors] = useState({});
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        router.push('/Notification');
+        dispatch(resetQuizState());
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, router, dispatch]);
+
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.fullName.trim()) errors.fullName = 'Full name is required';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'Valid email is required';
+    if (!/^\+?[\d\s-]{10,}$/.test(formData.phoneNumber)) errors.phoneNumber = 'Valid phone number is required';
+    if (!formData.courseName.trim()) errors.courseName = 'Course name is required';
+    return errors;
   };
 
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phoneNumber: "",
-    courseName: "",
-  });
+  const handleInputChange = (questionId, value) => {
+    setAnswers(prev => ({
+      ...prev,
+      [questionId]: value.trim()
+    }));
+  };
 
   const handleChange = (e) => {
     const { id, value } = e.target;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      [id]: value,
+      [id]: value
     }));
-  };
-
-  //Function for handling form
-  const handleSubmitRegForm = async (e) => {
-    e.preventDefault();
-    try {
-      const result = await dispatch(register(formData)).unwrap();
-
-      if (result) {
-        window.location.href = "/Notification";
-      }
-    } catch (err) {
-      console.error("Registration failed:", err);
+    if (validationErrors[id]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [id]: ''
+      }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    dispatch(submitQuizAnswers(answers))
-      .then(() => {
-        setSuccessMessage("Quiz submitted successfully!");
-        setTimeout(() => {
-          setSuccessMessage("");
-        }, 3000);
-      })
-      .catch((err) => {
-        console.error("Submission error:", err);
-      });
+    const errors = validateForm();
+    
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+
+    try {
+      if (!registrationComplete) {
+        await dispatch(register(formData)).unwrap();
+      }
+      await dispatch(submitQuizAnswers({ formData, answers })).unwrap();
+    } catch (err) {
+      console.error('Submission failed:', err);
+    }
   };
 
   const renderQuestion = (id, question, isTextArea = false) => (
@@ -68,14 +86,18 @@ const QuizPage = () => {
         <h1 className="font-bold pl-2">{question}</h1>
         {isTextArea ? (
           <textarea
-            className="qes-input h-16 pb-3"
+            className="qes-input h-16 pb-3 w-full p-2 border rounded"
+            value={answers[id] || ''}
             onChange={(e) => handleInputChange(id, e.target.value)}
+            required
           />
         ) : (
           <input
             type="text"
-            className="qes-input"
+            className="qes-input w-full p-2 border rounded"
+            value={answers[id] || ''}
             onChange={(e) => handleInputChange(id, e.target.value)}
+            required
           />
         )}
       </Card>
@@ -83,277 +105,109 @@ const QuizPage = () => {
   );
 
   return (
-    <div>
-      <div className="relative">
-        <div className="relative top-[-80px] md:w-[768px] lg:w-[1024px]">
-          <img
-            src="/heroImage.jpg"
-            className="hero md:w-[768px] lg:w-[1024px]"
-            alt="Hero"
-          />
-          <div className="overlay md:w-[768px] lg:w-[1024px]"></div>
-        </div>
-        <div className="relative z-20 ml-3 text-white">
-          <h1 className="uppercase mt-20 pt-10 font-bold md:text-center">
-            Welcome To Your Exam
-          </h1>
-          <p className="text-start px-2">
-            Please read your answers through before clicking the submit button.
-            You can only submit the exam once. Any other submissions will be
-            disregarded. <br />
-            Please give your correct contact details as indicated in your
-            registration form.
-          </p>
-        </div>
-      </div>
-
-      <div className="big-form-div mt-24 mb-56 md:mt-36 md:h-[60vh] lg:h-[50vh]">
-        <div className="sec-form-div bg-gray-200 w-[330px] ml-8 pl-4 rounded-lg shadow-xl py-2 md:w-[600px] md:ml-20 lg:ml-48">
-          <h1 className="font-bold text-2xl md:ml-40">
-            Fill in correct details
-          </h1>
-
-          {error && <div className="text-red-500 mt-2 mb-2">{error}</div>}
-
-          <form onSubmit={handleSubmitRegForm} className="mt-3 md:ml-10">
-            <div className="text-start">
-              <label htmlFor="fullName" className="pl-2 font-semibold">
-                Full name:
-              </label>
-              <input
-                type="text"
-                id="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                className="border-2 border-black w-[300px] rounded-lg pl-1 md:w-[380px]"
-                required
-              />
-            </div>
-
-            <div className="mt-3 text-start flex flex-col md:flex-row">
-              <label htmlFor="email" className="pl-2 font-semibold">
-                Email:
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="border-2 border-black w-[300px] rounded-lg md:w-[410px]"
-                required
-              />
-            </div>
-
-            <div className="mt-3 text-start">
-              <label htmlFor="phoneNumber" className="pl-2 font-semibold">
-                Phone number:
-              </label>
-              <input
-                type="tel"
-                id="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleChange}
-                className="border-2 border-black w-[300px] rounded-lg md:w-[340px]"
-                required
-              />
-            </div>
-
-            <div className="mt-3 text-start">
-              <label
-                htmlFor="courseName"
-                className="text-start pl-2 font-semibold"
-              >
-                Name of course:
-              </label>
-              <input
-                type="text"
-                id="courseName"
-                value={formData.courseName}
-                onChange={handleChange}
-                className="border-2 border-black w-[300px] rounded-lg md:w-[330px]"
-                required
-              />
-            </div>
-
-{/**WE don't need this button since the question button will submit all.... */}
-            {/* <button
-              type="submit"
-              disabled={isLoading}
-              className={`button mt-4 border-2 border-black rounded-md w-[200px] ml-12 py-1 md:ml-32 ${
-                isLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-            >
-              {isLoading ? "Submitting..." : "Submit"}
-            </button> */}
-          </form>
-        </div>
-      </div>
-
-      <div className="overall mt-10 ml-2">
-        <p className="font-semibold md:text-3xl">
-          Please read your answers through before clicking the submit button.
-        </p>
-
-        <form onSubmit={handleSubmit}>
-          <div className="question mt-10">
-            <h1 className="font-bold uppercase text-center underline md:text-3xl">
-              questions
+    <div className="min-h-screen bg-gray-50">
+      <div className="relative hero-section">
+        <img
+          src="/heroImage.jpg"
+          className="w-full h-64 md:h-96 object-cover"
+          alt="Hero"
+        />
+        <div className="absolute inset-0 bg-black bg-opacity-50">
+          <div className="container mx-auto px-4 py-20 text-white">
+            <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
+              Welcome To Your Exam
             </h1>
-            <div className="py-6 question-div md:ml-20 lg:ml-44 xl:ml-80">
-              {renderQuestion(
-                "q1",
-                "1. Who is the current General Overseer of the RCCG?"
-              )}
-              {renderQuestion(
-                "q2",
-                "2. List three of the promises of God concerning RCCG.",
-                true
-              )}
-              {renderQuestion(
-                "q3a",
-                "3a. For whom is the worker in this mission working for?"
-              )}
-              {renderQuestion("q3b", "3b. Who rewards the worker?")}
-              {renderQuestion("q3c", "3c. Why do you want to be a worker?")}
-              {renderQuestion(
-                "q3d",
-                "support this answer above with a scripture.",
-                true
-              )}
-              {renderQuestion(
-                "q4",
-                "4. Mention the major department of service in this mission."
-              )}
-              {renderQuestion(
-                "q5",
-                "5. List ten points that a worker is supposed to pray about regularly.",
-                true
-              )}
-              {renderQuestion(
-                "q6",
-                "6. List four financial responsibilities of a worker.",
-                true
-              )}
-              {renderQuestion(
-                "q7a",
-                "7a. What is the expectation of the worker towards soul winning?"
-              )}
-              {renderQuestion(
-                "q7b",
-                "7b. List two effective ways of 'evangelism and follow up'.",
-                true
-              )}
-              {renderQuestion(
-                "q8",
-                "8. List five qualifications of a worker?",
-                true
-              )}
-              {renderQuestion(
-                "q9",
-                "9. List four ways by which it can be known that a worker is totally submissive to the constituted authorities of the mission.",
-                true
-              )}
-              {renderQuestion(
-                "q10a",
-                "10a. When there is a doubt about the correct way of dressing, to whom should the worker give the benefit of doubt?"
-              )}
-              {renderQuestion(
-                "q10b",
-                "10b. How late is the worker allowed to come for meeting?"
-              )}
-              {renderQuestion(
-                "q11a",
-                "11a. What is the basis for discipline a worker? Quote with a scripture reference.",
-                true
-              )}
-              {renderQuestion(
-                "q11b",
-                "11b. During the period of discipline, what is expected of the worker?"
-              )}
-              {renderQuestion(
-                "q12a",
-                "12a. Which categories of people are lower than the worker in the hierarchy of the RCCG?"
-              )}
-              {renderQuestion(
-                "q13",
-                "13. Why did Jesus decide to choose the twelve?"
-              )}
-              {renderQuestion(
-                "q14",
-                "14. List twelve disciples of the Lord Jesus Christ.",
-                true
-              )}
-              {renderQuestion(
-                "q15",
-                "15. Who did Jesus Christ refer to as son of perdition?"
-              )}
-              {renderQuestion("q16", "16. Write Hebrews 13:8")}
-              {renderQuestion("q17", "17. State Acts 1:8")}
-              {renderQuestion(
-                "q18",
-                "18. Who was the king who led Israel into victory with praise?"
-              )}
-              {renderQuestion(
-                "q19",
-                "19. What is the difference between tithes and offering?"
-              )}
-              {renderQuestion(
-                "q20",
-                "20. Give 3 responsibilities of an Usher.",
-                true
-              )}
-              {renderQuestion(
-                "q21",
-                "21. Give 2 functions of the technical department.",
-                true
-              )}
-              {renderQuestion("q22", "22. What does Matthew 28:18-20 say?")}
-              {renderQuestion(
-                "q23",
-                "23. What is the theme of the Church for the year 2012. Which verse in the book of Psalm is it taken from?"
-              )}
-              {renderQuestion(
-                "q24",
-                "24. What is the theme of the youth service this month?"
-              )}
-              {renderQuestion(
-                "q25",
-                "25. What is the name of the pastor of RCCG fountain of God's Glory?"
-              )}
-              {renderQuestion(
-                "q26",
-                "26. What is the name of the founder of the RCCG?"
-              )}
-              {renderQuestion(
-                "q27",
-                "27. Mention 3 units you will like to function in the church",
-                true
-              )}
-              {renderQuestion("q28", "28. What does holiness mean?")}
-              {renderQuestion("q29", "29. What does holy communion signify?")}
+            <p className="text-lg text-center">
+              Please read your answers carefully before submission.
+              Only one submission is allowed.
+            </p>
+          </div>
+        </div>
+      </div>
 
-              <div className="mt-10 text-center mb-28">
-                <button
-                  type="submit"
-                  className="submit text-xl border-2 px-6 py-1 rounded-md font-bold text-white bg-gray-200 border-white shadow-lg inset-2 xl:px-12 xl:ml-[-350px]"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Submitting..." : "Submit"}
-                </button>
-                {error && (
-                    <p className="text-red-500 text-center mt-4">Failed</p>
-                  ) &&
-                  console.log(error)}
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-xl p-6">
+          <h2 className="text-2xl font-bold text-center mb-8">
+            Registration Details
+          </h2>
 
-                {successMessage && (
-                  <p className="text-green-500 text-center mt-4">
-                    {successMessage}
-                  </p>
+          {error && (
+  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+    {error.message || error}
+  </div>
+)}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {Object.entries(formData).map(([id, value]) => (
+              <div key={id}>
+                <label htmlFor={id} className="block font-semibold mb-1">
+                  {id.charAt(0).toUpperCase() + id.slice(1).replace(/([A-Z])/g, ' $1')}:
+                </label>
+                <input
+                  type={id === 'email' ? 'email' : 'text'}
+                  id={id}
+                  value={value}
+                  onChange={handleChange}
+                  className={`w-full p-2 border rounded ${
+                    validationErrors[id] ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  required
+                />
+                {validationErrors[id] && (
+                  <p className="text-red-500 text-sm mt-1">{validationErrors[id]}</p>
                 )}
               </div>
+            ))}
+
+            <div className="questions-section mt-12">
+              <h2 className="text-2xl font-bold text-center mb-8 uppercase">
+                Questions
+              </h2>
+              <div className="space-y-6">
+                  {[
+                    { id: 'q1', question: '1. Who is the current General Overseer of the RCCG?' },
+                    { id: 'q2', question: '2. List three of the promises of God concerning RCCG.', isTextArea: true },
+                    { id: 'q3a', question: '3a. For whom is the worker in this mission working for?' },
+                    { id: 'q3b', question: '3b. Who rewards the worker?' },
+                    { id: 'q3c', question: '3c. Why do you want to be a worker?' },
+                    { id: 'q3d', question: '3d. Support this answer above with a scripture.', isTextArea: true },
+                    { id: 'q4', question: '4. Mention the major department of service in this mission.' },
+                    { id: 'q5', question: '5. List ten points that a worker is supposed to pray about regularly.', isTextArea: true },
+                    { id: 'q6', question: '6. List four financial responsibilities of a worker.', isTextArea: true },
+                    { id: 'q7a', question: '7a. What is the expectation of the worker towards soul winning?' },
+                    { id: 'q7b', question: '7b. List two effective ways of evangelism and follow up.', isTextArea: true },
+                    { id: 'q8', question: '8. List five qualifications of a worker?', isTextArea: true },
+                    { id: 'q9', question: '9. List four ways by which it can be known that a worker is totally submissive to the constituted authorities of the mission.', isTextArea: true },
+                    { id: 'q10a', question: '10a. When there is a doubt about the correct way of dressing, to whom should the worker give the benefit of doubt?' },
+                    { id: 'q10b', question: '10b. How late is the worker allowed to come for meeting?' },
+                    { id: 'q11a', question: '11a. What is the basis for discipline a worker? Quote with a scripture reference.', isTextArea: true },
+                    { id: 'q11b', question: '11b. During the period of discipline, what is expected of the worker?' },
+                    { id: 'q12a', question: '12a. Which categories of people are lower than the worker in the hierarchy of the RCCG?' },
+                    { id: 'q13', question: '13. Why did Jesus decide to choose the twelve?' },
+                    { id: 'q14', question: '14. List twelve disciples of the Lord Jesus Christ.', isTextArea: true },
+                    { id: 'q15', question: '15. Who did Jesus Christ refer to as son of perdition?' },
+                    { id: 'q16', question: '16. Why do workers get rewarded?' },
+                    { id: 'q17', question: '17. Mention two places in the New Testament where the Church was referred to as the body of Christ.' },
+                    { id: 'q18', question: '18. What are the three responsibilities of a church worker?', isTextArea: true },
+                    { id: 'q19', question: '19. How many hours is a worker expected to pray daily?', isTextArea: true },
+                    { id: 'q20', question: '20. What should be the prayer of a worker?', isTextArea: true }
+                  ].map(({ id, question, isTextArea }) => renderQuestion(id, question, isTextArea))}
+                </div>
             </div>
-          </div>
-        </form>
+
+            <div className="text-center mt-8">
+              <button
+                type="submit"
+                className={`bg-black text-white px-8 py-3 rounded-lg ${
+                  isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-800'
+                }`}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Submitting...' : 'Submit'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

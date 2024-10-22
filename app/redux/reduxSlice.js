@@ -1,99 +1,92 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const baseUrl = 'http://localhost:3001/api/forms/submit';
-const fetchUrl = 'http://localhost:3001/api/forms/submissions';
-const registerUrl = 'http://localhost:3001/api/forms/register';
-export const submitQuizAnswers = createAsyncThunk(
-  'quiz/submitAnswers',
-  async (answers, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(`${baseUrl}`, answers);
-      return response.data;
-      console.log(response.data);
-      console.log('Hi')
-    } catch (error) {
-      return rejectWithValue(error.response.data);
-    }
-  }
-);
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/forms';
 
 export const register = createAsyncThunk(
   'quiz/register',
-  async (data, {rejectWithValue }) => {
+  async (registrationDetails, { rejectWithValue }) => {
     try {
-    const response = await axios.post(`${registerUrl}`, data);
-    return response.data;
-    console.log(response.data);
-  } catch (error) {
-    return rejectWithValue(error.response.data);
-    console.log(error);
-  }
-}
-)
-export const fetchQuizAnswers = createAsyncThunk(
-  'quiz/fetchAnswers',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(fetchUrl);
+      const response = await axios.post(`${API_BASE_URL}/register`, registrationDetails);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || 'Registration failed');
     }
   }
 );
 
+export const submitQuizAnswers = createAsyncThunk(
+  'quiz/submit',
+  async ({ formData, answers }, { getState, rejectWithValue }) => {
+    try {
+      const { userId } = getState().quiz;
+      const payload = {
+        userId,
+        registrationDetails: {
+          ...formData,
+          registrationDate: new Date().toISOString()
+        },
+        quizAnswers: Object.entries(answers).reduce((acc, [key, value]) => ({
+          ...acc,
+          [key]: Array.isArray(value) ? value.join(', ') : String(value)
+        }), {})
+      };
 
+      const response = await axios.post(`${API_BASE_URL}/submit`, payload);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Submission failed');
+    }
+  }
+);
 
 const quizSlice = createSlice({
   name: 'quiz',
   initialState: {
+    userId: null,
     isLoading: false,
     error: null,
-    submissionResult: null,
-    answerResult: null,
-    data: null,
+    success: false,
+    registrationComplete: false
   },
-  reducers: {},
+  reducers: {
+    resetQuizState: (state) => {
+      state.error = null;
+      state.success = false;
+    },
+    clearError: (state) => {
+      state.error = null;
+    }
+  },
   extraReducers: (builder) => {
     builder
-      .addCase(submitQuizAnswers.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(submitQuizAnswers.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.submissionResult = action.payload;
-      })
-      .addCase(submitQuizAnswers.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload || 'An error occurred';
-      })
-      .addCase(fetchQuizAnswers.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(fetchQuizAnswers.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.answerResult = action.payload; // Store the fetched answers
-      })
-      .addCase(fetchQuizAnswers.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload || "An error occurred";
-      })
       .addCase(register.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.data = action.payload || 'An error occurred';
+        state.userId = action.payload.userId;
+        state.registrationComplete = true;
       })
       .addCase(register.rejected, (state, action) => {
-        state.isLoading = false,
-        state.data = action.payload || "An error occured"
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(submitQuizAnswers.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(submitQuizAnswers.fulfilled, (state) => {
+        state.isLoading = false;
+        state.success = true;
+      })
+      .addCase(submitQuizAnswers.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       });
-  },
+  }
 });
 
+export const { resetQuizState, clearError } = quizSlice.actions;
 export default quizSlice.reducer;
